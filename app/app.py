@@ -47,8 +47,8 @@ if page == "Pencarian":
                                 with st.expander(f"**{doc_id}**"):
                                     st.write(snippet + "...")
                                     if st.button(f"Lihat Lengkap {doc_id}", key=f"full_{doc_id}"):
-                                        full_text = model.documents[doc_id]
-                                        st.text_area("Isi Dokumen Lengkap:", full_text, height=200)
+                                        st.write("**Isi Dokumen Lengkap:**")
+                                        st.write(model.documents[doc_id])
                         else:
                             st.write("Tidak ada dokumen yang relevan.")
                     else:
@@ -59,8 +59,8 @@ if page == "Pencarian":
                                 with st.expander(f"**{doc_id}** (Skor: {score:.2f})"):
                                     st.write(snippet + "...")
                                     if st.button(f"Lihat Lengkap {doc_id}", key=f"full_{doc_id}"):
-                                        full_text = model.documents[doc_id]
-                                        st.text_area("Isi Dokumen Lengkap:", full_text, height=200)
+                                        st.write("**Isi Dokumen Lengkap:**")
+                                        st.write(model.documents[doc_id])
                         else:
                             st.write("Tidak ada dokumen yang relevan.")
             else:
