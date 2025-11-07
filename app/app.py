@@ -49,6 +49,7 @@ if page == "Pencarian":
                                     if st.button(f"Lihat Lengkap {doc_id}", key=f"full_{doc_id}"):
                                         st.write("**Isi Dokumen Lengkap:**")
                                         st.write(model.documents[doc_id])
+                                        st.write("---")
                         else:
                             st.write("Tidak ada dokumen yang relevan.")
                     else:
