@@ -6,6 +6,16 @@ import streamlit as st
 from src.boolean_retrieval import BooleanRetrieval
 from src.vsm import VectorSpaceModel
 
+# Initialize session state
+if 'model_choice' not in st.session_state:
+    st.session_state.model_choice = "Boolean Retrieval"
+if 'query' not in st.session_state:
+    st.session_state.query = ""
+if 'results' not in st.session_state:
+    st.session_state.results = None
+if 'expanded' not in st.session_state:
+    st.session_state.expanded = {}
+
 # Sidebar untuk navigasi
 st.sidebar.title("Navigasi")
 page = st.sidebar.radio("Pilih Halaman", ["Pencarian", "Tentang Dataset", "Evaluasi"])
@@ -18,7 +28,8 @@ if page == "Pencarian":
 
     with col1:
         # Pilih model
-        model_choice = st.selectbox("Pilih Model Retrieval:", ["Boolean Retrieval", "Vector Space Model"])
+        model_choice = st.selectbox("Pilih Model Retrieval:", ["Boolean Retrieval", "Vector Space Model"], key="model_select")
+        st.session_state.model_choice = model_choice
 
         if model_choice == "Boolean Retrieval":
             model = BooleanRetrieval()
@@ -27,7 +38,8 @@ if page == "Pencarian":
             model = VectorSpaceModel()
             query_type = "Query bebas (e.g., 'gejala demam')"
 
-        query = st.text_input(f"Masukkan {query_type}:")
+        query = st.text_input(f"Masukkan {query_type}:", value=st.session_state.query, key="query_input")
+        st.session_state.query = query
 
         # Tombol contoh query
         if st.button("Contoh Query"):
@@ -38,34 +50,50 @@ if page == "Pencarian":
 
         if st.button("Cari"):
             if query:
-                with col2:
-                    if model_choice == "Boolean Retrieval":
-                        results = model.search(query)
-                        if results:
-                            st.subheader("Hasil Pencarian:")
-                            for doc_id, snippet in results:
-                                with st.expander(f"**{doc_id}**"):
-                                    st.write(snippet + "...")
-                                    if st.button(f"Lihat Lengkap {doc_id}", key=f"full_{doc_id}"):
-                                        st.write("**Isi Dokumen Lengkap:**")
-                                        st.write(model.documents[doc_id])
-                                        st.write("---")
-                        else:
-                            st.write("Tidak ada dokumen yang relevan.")
-                    else:
-                        results = model.search(query)
-                        if results:
-                            st.subheader("Hasil Pencarian:")
-                            for doc_id, snippet, score in results:
-                                with st.expander(f"**{doc_id}** (Skor: {score:.2f})"):
-                                    st.write(snippet + "...")
-                                    if st.button(f"Lihat Lengkap {doc_id}", key=f"full_{doc_id}"):
-                                        st.write("**Isi Dokumen Lengkap:**")
-                                        st.write(model.documents[doc_id])
-                        else:
-                            st.write("Tidak ada dokumen yang relevan.")
+                if model_choice == "Boolean Retrieval":
+                    st.session_state.results = model.search(query)
+                else:
+                    st.session_state.results = model.search(query)
+                # Reset expanded states
+                st.session_state.expanded = {}
             else:
                 st.error("Masukkan query terlebih dahulu.")
+
+    with col2:
+        if st.session_state.results:
+            if model_choice == "Boolean Retrieval":
+                results = st.session_state.results
+                if results:
+                    st.subheader("Hasil Pencarian:")
+                    for doc_id, snippet in results:
+                        expanded = st.session_state.expanded.get(doc_id, False)
+                        with st.expander(f"**{doc_id}**", expanded=expanded):
+                            st.write(snippet + "...")
+                            if st.button(f"Lihat Lengkap {doc_id}", key=f"full_{doc_id}"):
+                                st.session_state.expanded[doc_id] = True
+                                st.rerun()  # Force rerun to update expander
+                            if expanded:
+                                st.write("**Isi Dokumen Lengkap:**")
+                                st.write(model.documents[doc_id])
+                                st.write("---")
+                else:
+                    st.write("Tidak ada dokumen yang relevan.")
+            else:
+                results = st.session_state.results
+                if results:
+                    st.subheader("Hasil Pencarian:")
+                    for doc_id, snippet, score in results:
+                        expanded = st.session_state.expanded.get(doc_id, False)
+                        with st.expander(f"**{doc_id}** (Skor: {score:.2f})", expanded=expanded):
+                            st.write(snippet + "...")
+                            if st.button(f"Lihat Lengkap {doc_id}", key=f"full_{doc_id}"):
+                                st.session_state.expanded[doc_id] = True
+                                st.rerun()  # Force rerun to update expander
+                            if expanded:
+                                st.write("**Isi Dokumen Lengkap:**")
+                                st.write(model.documents[doc_id])
+                else:
+                    st.write("Tidak ada dokumen yang relevan.")
 
 elif page == "Tentang Dataset":
     st.title("Tentang Dataset")
