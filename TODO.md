@@ -1,0 +1,5 @@
+- [x] Import stemmer in src/boolean_retrieval.py
+- [x] Add stemmer initialization in __init__
+- [x] Modify parse_query to stem query terms
+- [x] Fix data_dir in notebook for BooleanRetrieval
+- [x] Test by running evaluation script

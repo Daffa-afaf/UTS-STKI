@@ -1,11 +1,13 @@
 import os
 import re
+from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 
 class BooleanRetrieval:
     def __init__(self, data_dir='data/processed/'):
         self.data_dir = data_dir
         self.documents = {}
         self.index = {}
+        self.stemmer = StemmerFactory().create_stemmer()
         self.load_documents()
         self.build_index()
 
@@ -44,24 +46,25 @@ class BooleanRetrieval:
             idx = tokens.index('and')
             left = ' '.join(tokens[:idx])
             right = ' '.join(tokens[idx+1:])
-            return 'AND', left, right
+            return 'AND', self.stemmer.stem(left), self.stemmer.stem(right)
         elif 'or' in tokens:
             idx = tokens.index('or')
             left = ' '.join(tokens[:idx])
             right = ' '.join(tokens[idx+1:])
-            return 'OR', left, right
+            return 'OR', self.stemmer.stem(left), self.stemmer.stem(right)
         elif 'not' in tokens:
             idx = tokens.index('not')
             term = ' '.join(tokens[idx+1:])
-            return 'NOT', term, None
+            return 'NOT', self.stemmer.stem(term), None
         else:
             # No operators, split into terms and assume AND for multiple terms
             terms = query_lower.split()
             if len(terms) == 1:
-                return 'TERM', terms[0], None
+                return 'TERM', self.stemmer.stem(terms[0]), None
             else:
                 # Assume AND for multiple terms
-                return 'AND', terms[0], ' '.join(terms[1:])
+                stemmed_terms = [self.stemmer.stem(t) for t in terms]
+                return 'AND', stemmed_terms[0], ' '.join(stemmed_terms[1:])
 
     def search(self, query):
         """

@@ -24,5 +24,4 @@ def preprocess_file(input_file, output_file):
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(cleaned_text)
 
-# Example usage (can be removed later)
-# preprocess_file('data/raw/demam.txt', 'data/processed/demam_clean.txt')
+
