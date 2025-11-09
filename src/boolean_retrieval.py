@@ -35,34 +35,33 @@ class BooleanRetrieval:
         Parse boolean query: support AND, OR, NOT
         Simple parser for terms separated by operators.
         """
-        # Split by spaces, but keep operators
-        tokens = re.split(r'(\s+)', query)
+        query_lower = query.lower()
+        tokens = re.split(r'(\s+)', query_lower)
         tokens = [t.strip() for t in tokens if t.strip()]
 
-        # For simplicity, assume query like "term1 AND term2" or "term1 OR term2" or "NOT term"
-        # This is a basic implementation; can be extended for complex queries.
-
-        if 'AND' in tokens:
-            idx = tokens.index('AND')
-            left = tokens[:idx]
-            right = tokens[idx+1:]
-            left_term = ' '.join(left).strip()
-            right_term = ' '.join(right).strip()
-            return 'AND', left_term, right_term
-        elif 'OR' in tokens:
-            idx = tokens.index('OR')
-            left = tokens[:idx]
-            right = tokens[idx+1:]
-            left_term = ' '.join(left).strip()
-            right_term = ' '.join(right).strip()
-            return 'OR', left_term, right_term
-        elif 'NOT' in tokens:
-            idx = tokens.index('NOT')
-            term = ' '.join(tokens[idx+1:]).strip()
+        # Check for operators
+        if 'and' in tokens:
+            idx = tokens.index('and')
+            left = ' '.join(tokens[:idx])
+            right = ' '.join(tokens[idx+1:])
+            return 'AND', left, right
+        elif 'or' in tokens:
+            idx = tokens.index('or')
+            left = ' '.join(tokens[:idx])
+            right = ' '.join(tokens[idx+1:])
+            return 'OR', left, right
+        elif 'not' in tokens:
+            idx = tokens.index('not')
+            term = ' '.join(tokens[idx+1:])
             return 'NOT', term, None
         else:
-            # Single term
-            return 'TERM', ' '.join(tokens).strip(), None
+            # No operators, split into terms and assume AND for multiple terms
+            terms = query_lower.split()
+            if len(terms) == 1:
+                return 'TERM', terms[0], None
+            else:
+                # Assume AND for multiple terms
+                return 'AND', terms[0], ' '.join(terms[1:])
 
     def search(self, query):
         """
@@ -85,9 +84,10 @@ class BooleanRetrieval:
         else:
             result_docs = self.index.get(term1, set())
 
+        result_docs = sorted(result_docs, key=len)
         results = []
         for doc_id in result_docs:
-            snippet = self.documents[doc_id][:100]  # First 100 chars as snippet
+            snippet = self.documents[doc_id][:100]  # 100 karakter pertama sebagai cuplikan
             results.append((doc_id, snippet))
 
         return results
