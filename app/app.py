@@ -124,17 +124,47 @@ elif page == "Tentang Dataset":
 
 elif page == "Evaluasi":
     st.title("Evaluasi Sistem")
-    st.write("Halaman ini untuk menjalankan evaluasi model.")
+    st.write("Halaman ini untuk menjalankan evaluasi model dengan precision, recall, dan MAP@k.")
 
-    # Input untuk evaluasi
-    eval_query = st.text_input("Masukkan query untuk evaluasi:")
+    # Import evaluation
+    from src.evaluation import evaluate_model
+
+    # Inisialisasi model
+    br_model = BooleanRetrieval()
+    vsm_model = VectorSpaceModel()
+
+    # Contoh queries dan ground truth
+    queries = ['demam', 'batuk', 'sakit AND kepala']
+    ground_truth = {
+        'demam': ['demam', 'flu'],
+        'batuk': ['batuk', 'asma'],
+        'sakit AND kepala': ['sakit_kepala', 'stres']
+    }
+
+    # Pilih model
+    eval_model_choice = st.selectbox("Pilih Model untuk Evaluasi:", ["Boolean Retrieval", "Vector Space Model"])
+    if eval_model_choice == "Boolean Retrieval":
+        eval_model = br_model
+    else:
+        eval_model = vsm_model
+
     if st.button("Jalankan Evaluasi"):
-        if eval_query:
-            # Import evaluation
-            from src.evaluation import evaluate_model
-            # Asumsikan ada fungsi evaluate_model yang menerima query dan model
-            # Untuk demo, kita tampilkan placeholder
-            st.write("Evaluasi untuk query:", eval_query)
-            st.write("Precision: 0.85, Recall: 0.78, MAP@5: 0.72")
-        else:
-            st.error("Masukkan query untuk evaluasi.")
+        st.write(f"Evaluasi untuk model: {eval_model_choice}")
+        results = evaluate_model(eval_model, queries, ground_truth, k=10)
+
+        for query in queries:
+            precision = results[query]['precision']
+            recall = results[query]['recall']
+            ap = results[query]['ap']
+            retrieved_docs = results[query]['retrieved_docs']
+            st.subheader(f"Query: '{query}'")
+            st.write(f"Retrieved docs: {retrieved_docs}")
+            st.write(f"Precision@10: {precision:.3f}")
+            st.write(f"Recall@10: {recall:.3f}")
+            st.write(f"Average Precision: {ap:.3f}")
+            st.write("---")
+
+        map_k = results['MAP@k']
+        st.subheader(f"MAP@k: {map_k:.3f}")
+
+  
